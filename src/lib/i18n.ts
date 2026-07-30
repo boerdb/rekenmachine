@@ -1,0 +1,46 @@
+export type Language = "nl" | "en";
+
+export const copy = {
+  nl: {
+    title: "Grafische rekenmachine",
+    subtitle: "Wetenschappelijk · grafieken · offline",
+    calculator: "Rekenen",
+    graph: "Grafiek",
+    history: "Geschiedenis",
+    expression: "Voer een berekening in",
+    result: "Resultaat",
+    invalid: "Controleer de formule",
+    emptyHistory: "Je berekeningen verschijnen hier.",
+    clearHistory: "Alles wissen",
+    functions: "Functies",
+    addFunction: "Functie toevoegen",
+    resetView: "Herstel beeld",
+    graphHint: "Sleep om te bewegen · knijp of scroll om te zoomen",
+    install: "Installeer app",
+    theme: "Thema wisselen",
+    language: "Switch to English",
+    delete: "Verwijderen",
+  },
+  en: {
+    title: "Graphing calculator",
+    subtitle: "Scientific · graphs · offline",
+    calculator: "Calculate",
+    graph: "Graph",
+    history: "History",
+    expression: "Enter a calculation",
+    result: "Result",
+    invalid: "Check the expression",
+    emptyHistory: "Your calculations will appear here.",
+    clearHistory: "Clear all",
+    functions: "Functions",
+    addFunction: "Add function",
+    resetView: "Reset view",
+    graphHint: "Drag to move · pinch or scroll to zoom",
+    install: "Install app",
+    theme: "Toggle theme",
+    language: "Schakel naar Nederlands",
+    delete: "Delete",
+  },
+} as const;
+
+export type Copy = (typeof copy)[Language];

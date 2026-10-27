@@ -15,11 +15,14 @@ export const copy = {
     functions: "Functies",
     addFunction: "Functie toevoegen",
     resetView: "Herstel beeld",
-    graphHint: "Sleep om te bewegen · knijp of scroll om te zoomen",
+    graphHint: "Sleep om te schuiven · knijp of scroll om te zoomen",
     install: "Installeer app",
     theme: "Thema wisselen",
     language: "Switch to English",
     delete: "Verwijderen",
+    copied: "Gekopieerd",
+    copy: "Tik om te kopiëren",
+    undefinedValue: "Ongedefinieerd of ongeldige formule",
   },
   en: {
     title: "Graphing calculator",
@@ -40,6 +43,9 @@ export const copy = {
     theme: "Toggle theme",
     language: "Schakel naar Nederlands",
     delete: "Delete",
+    copied: "Copied",
+    copy: "Tap to copy",
+    undefinedValue: "Undefined or invalid expression",
   },
 } as const;
 

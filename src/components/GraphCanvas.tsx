@@ -28,6 +28,7 @@ export function GraphCanvas({
   const viewRef = useRef<View>(initialView);
   const pointers = useRef(new Map<number, { x: number; y: number }>());
   const lastPinch = useRef<number | null>(null);
+  const hoverX = useRef<number | null>(null);
   const [size, setSize] = useState({ width: 600, height: 430 });
 
   useEffect(() => {
@@ -54,10 +55,13 @@ export function GraphCanvas({
     context.scale(dpr, dpr);
 
     const styles = getComputedStyle(canvas);
-    const background = styles.getPropertyValue("--graph-bg").trim() || "#101b33";
-    const grid = styles.getPropertyValue("--graph-grid").trim() || "#263553";
-    const axis = styles.getPropertyValue("--graph-axis").trim() || "#8da0c6";
-    const label = styles.getPropertyValue("--muted").trim() || "#8da0c6";
+    const background = styles.getPropertyValue("--graph-bg").trim() || "#181613";
+    const grid = styles.getPropertyValue("--graph-grid").trim() || "#2a2521";
+    const axis = styles.getPropertyValue("--graph-axis").trim() || "#7d7063";
+    const label = styles.getPropertyValue("--muted").trim() || "#a09282";
+    const surface = styles.getPropertyValue("--surface").trim() || "#1e1b18";
+    const foreground = styles.getPropertyValue("--foreground").trim() || "#f3ece2";
+    const mono = styles.getPropertyValue("--font-mono").trim() || "monospace";
     context.fillStyle = background;
     context.fillRect(0, 0, size.width, size.height);
 
@@ -81,7 +85,7 @@ export function GraphCanvas({
     context.lineWidth = 1;
     context.strokeStyle = grid;
     context.fillStyle = label;
-    context.font = "11px system-ui";
+    context.font = `11px ${mono}`;
     context.textAlign = "center";
     context.textBaseline = "top";
 
@@ -128,6 +132,7 @@ export function GraphCanvas({
     context.lineTo(yAxis, size.height);
     context.stroke();
 
+    const readouts: { color: string; y: number }[] = [];
     for (const item of functions) {
       if (!item.visible || !item.expression.trim()) continue;
       let evaluate: (x: number) => number;
@@ -135,6 +140,9 @@ export function GraphCanvas({
         evaluate = compileExpression(item.expression, angleMode);
       } catch {
         continue;
+      }
+      if (hoverX.current !== null) {
+        readouts.push({ color: item.color, y: evaluate(fromScreenX(hoverX.current)) });
       }
       context.strokeStyle = item.color;
       context.lineWidth = 2.5;
@@ -160,6 +168,59 @@ export function GraphCanvas({
         previousY = py;
       }
       context.stroke();
+    }
+
+    // Meelezen: verticale lijn op de muispositie met de y-waarde van elke functie.
+    const hx = hoverX.current;
+    if (hx !== null) {
+      context.save();
+      context.setLineDash([4, 4]);
+      context.strokeStyle = axis;
+      context.lineWidth = 1;
+      context.beginPath();
+      context.moveTo(hx, 0);
+      context.lineTo(hx, size.height);
+      context.stroke();
+      context.restore();
+
+      const lines = [`x = ${Number(fromScreenX(hx).toPrecision(4))}`];
+      for (const readout of readouts) {
+        if (!Number.isFinite(readout.y)) continue;
+        const py = toScreenY(readout.y);
+        context.fillStyle = background;
+        context.strokeStyle = readout.color;
+        context.lineWidth = 2.5;
+        context.beginPath();
+        context.arc(hx, py, 5, 0, Math.PI * 2);
+        context.fill();
+        context.stroke();
+        lines.push(`y = ${Number(readout.y.toPrecision(4))}`);
+      }
+
+      context.font = `600 12px ${mono}`;
+      const width = Math.max(...lines.map((line) => context.measureText(line).width)) + 30;
+      const height = lines.length * 18 + 12;
+      const boxX = hx + 14 + width > size.width ? hx - 14 - width : hx + 14;
+      context.fillStyle = surface;
+      context.strokeStyle = grid;
+      context.lineWidth = 1;
+      context.beginPath();
+      context.roundRect(boxX, 12, width, height, 10);
+      context.fill();
+      context.stroke();
+      context.textAlign = "left";
+      context.textBaseline = "middle";
+      lines.forEach((line, index) => {
+        const y = 12 + 15 + index * 18;
+        if (index > 0) {
+          context.fillStyle = readouts.filter((r) => Number.isFinite(r.y))[index - 1].color;
+          context.beginPath();
+          context.arc(boxX + 12, y, 4, 0, Math.PI * 2);
+          context.fill();
+        }
+        context.fillStyle = index === 0 ? label : foreground;
+        context.fillText(line, boxX + 22, y);
+      });
     }
   }, [angleMode, functions, size]);
 
@@ -210,7 +271,14 @@ export function GraphCanvas({
         }}
         onPointerMove={(event) => {
           const previous = pointers.current.get(event.pointerId);
-          if (!previous) return;
+          if (!previous) {
+            if (event.pointerType === "mouse") {
+              hoverX.current = event.clientX - event.currentTarget.getBoundingClientRect().left;
+              draw();
+            }
+            return;
+          }
+          hoverX.current = null;
           const active = pointers.current;
           active.set(event.pointerId, { x: event.clientX, y: event.clientY });
           if (active.size === 1) {
@@ -238,6 +306,10 @@ export function GraphCanvas({
         onPointerUp={(event) => {
           pointers.current.delete(event.pointerId);
           lastPinch.current = null;
+        }}
+        onPointerLeave={() => {
+          hoverX.current = null;
+          draw();
         }}
         onPointerCancel={(event) => {
           pointers.current.delete(event.pointerId);

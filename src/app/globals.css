@@ -57,6 +57,13 @@ html {
   background: var(--background);
 }
 
+/* iOS 26 home-screen-app: viewport is één statusbalk te kort (WebKit-bug 301108), anders een strook onderin. */
+@media (display-mode: standalone) {
+  html {
+    min-height: min(100lvh, calc(100% + env(safe-area-inset-top)));
+  }
+}
+
 body {
   margin: 0;
   background:
@@ -91,8 +98,9 @@ button:focus-visible, input:focus-visible {
   flex-direction: column;
 }
 
+/* Geen vaste hoogte: op de iPhone komt de statusbalk (safe-area) er bovenop. */
 .topbar {
-  height: 72px;
+  min-height: calc(60px + max(12px, env(safe-area-inset-top)));
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -749,7 +757,7 @@ footer {
 
 @media (max-width: 560px) {
   .topbar {
-    height: 64px;
+    min-height: calc(52px + max(12px, env(safe-area-inset-top)));
   }
   .brand p, .install-button {
     display: none;
